@@ -18,7 +18,7 @@ input_id = n
 
 
 # define function to calculate Luch digit
-def luch_ch_funct(acc_id_list):
+def luch_calc(acc_id_list):
     # multiply odd digits by 2
     i = 0
     while i < len(acc_id_list):
@@ -43,9 +43,9 @@ def luch_ch_funct(acc_id_list):
     else:
         luch_digit = 10 - reminder
     return luch_digit
+
+
 # define function to convert first 15 symbols of card number to list of integers
-
-
 def conv_to_intlist(acc_to_verify):
     acc_id_list = list(map(int, acc_to_verify))
     return acc_id_list
@@ -62,13 +62,13 @@ while True:
         # create list of account_id digits
         acc_to_verify = (BIN + str(account_id))
         acc_id_list = conv_to_intlist(acc_to_verify)
-        checksum = luch_ch_funct(acc_id_list)
+        checksum = luch_calc(acc_id_list)
         # define card number 
         card_number = BIN + str(account_id) + str(checksum)
         # text datatype was assigned to pin attribute in card table
         # pins starting with zero are not generated since in such case first symbol in pin is dropped when committing to DB
         pin = str(random.randrange(1, 10, 1)) + str(random.randrange(0, 10, 1)) + str(random.randrange(0, 10, 1)) + str(random.randrange(0, 10, 1))
-        # append dictionaries
+        # append DB
         cur.execute('INSERT INTO card (id, number, pin) VALUES ({}, {},{})'.format(input_id, card_number, pin))
         conn.commit()
         # print the required msg to customer
@@ -83,7 +83,7 @@ while True:
         input_pin = input('Enter your PIN:')
         try:
             cur.execute('SELECT pin FROM card where number = {};'.format(input_card_n))
-            r = cur.fetchone()  # retrieves data after executing the SELECT statement (tuple type)
+            r = cur.fetchone()
             # if card number and pin entered are right and match each other ...
             if r[0] == input_pin:
                 # ... 'You have successfully logged in!' is printed ...
@@ -95,10 +95,10 @@ while True:
                                               "4. Close account\n"
                                               "5. Log out\n"
                                               "0. Exit\n"))
-                # the same menu is offered to a customer each time they chose 1 '1. Balance'
+                # the same menu is offered to a customer each time they chose 1, 2 and 3 options
                 while customer_choice_2 in range(1, 4):
                     cur.execute('SELECT balance FROM card WHERE number = {};'.format(input_card_n))
-                    b = cur.fetchone()[0]  # retrieves data after executing the SELECT statement (tuple type)
+                    b = cur.fetchone()[0]
                     if customer_choice_2 == 1:
                         print('Balance: {}'.format(b))
                     elif customer_choice_2 == 2:
@@ -114,26 +114,22 @@ while True:
                         # Luch check
                         acc_to_verify = input_tr_account[0:15]
                         acc_id_list = conv_to_intlist(acc_to_verify)
-                        Luch_digit = luch_ch_funct(acc_id_list)
+                        Luch_digit = luch_calc(acc_id_list)
                         if int(input_tr_account[15]) != Luch_digit:
                             print('Probably you made a mistake in the card number. Please try again!')
                         # check if card entered is available in DB
                         cur.execute('SELECT COUNT(number) FROM card WHERE NUMBER = {};'.format(input_tr_account))
-                        p = cur.fetchone()[0]  # retrieves data after executing the SELECT statement (tuple type)
+                        p = cur.fetchone()[0]
                         if (p == 0) and (int(input_tr_account[15]) == Luch_digit):
                             print('Such a card does not exist.')
-
-                        # cur.execute('SELECT number FROM card where number = {};'.format(input_tr_account))
-                        # r = cur.fetchone()[0] # retrieves data after executing the SELECT statement (tuple type)
-
                         if (int(input_tr_account[15]) == Luch_digit) and (p > 0) and (input_tr_account != input_card_n):
                             input_tr_amount = int(input('Enter how much money you want to transfer:'))
                             cur.execute('SELECT balance FROM card where number = {};'.format(input_card_n))
-                            r1 = cur.fetchone()[0]  # retrieves data after executing the SELECT statement (tuple type)
+                            r1 = cur.fetchone()[0]
                             # check if balance is enough to transfer
                             if r1 >= input_tr_amount:
                                 cur.execute('SELECT balance FROM card where number = {};'.format(input_tr_account))
-                                r2 = cur.fetchone()[0]  # retrieves data after executing the SELECT statement (tuple type)
+                                r2 = cur.fetchone()[0]
                                 new_r1_b = r1 - input_tr_amount
                                 new_r2_b = r2 + input_tr_amount
                                 cur.execute('UPDATE card SET balance = {} WHERE number = {};'.format(new_r1_b, input_card_n))
