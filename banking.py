@@ -83,9 +83,9 @@ while True:
         input_pin = input('Enter your PIN:')
         try:
             cur.execute('SELECT pin FROM card where number = {};'.format(input_card_n))
-            r = cur.fetchone()
+            r = cur.fetchone()[0]
             # if card number and pin entered are right and match each other ...
-            if r[0] == input_pin:
+            if r == input_pin:
                 # ... 'You have successfully logged in!' is printed ...
                 print('You have successfully logged in!')
                 # ... and the program offers menu to chose further actions
@@ -156,6 +156,7 @@ while True:
                     # when customer chooses 0 '0. Exit', the program exits the outer loop
                     elif customer_choice_2 == 0:
                         print('Bye!')
+                        conn.close()
                         break
                     else:
                         print('error')
@@ -169,4 +170,5 @@ while True:
             print('Wrong card number or PIN!')
     elif customer_choice == 0:
         print('Bye!')
+        conn.close()
         break
