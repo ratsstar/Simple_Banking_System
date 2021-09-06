@@ -132,10 +132,16 @@ while True:
                                 r2 = cur.fetchone()[0]
                                 new_r1_b = r1 - input_tr_amount
                                 new_r2_b = r2 + input_tr_amount
-                                cur.execute('UPDATE card SET balance = {} WHERE number = {};'.format(new_r1_b, input_card_n))
-                                cur.execute('UPDATE card SET balance = {} WHERE number = {};'.format(new_r2_b, input_tr_account))
-                                conn.commit()
-                                print('Success!')
+                                #cur.execute('BEGIN TRANSACTION;')
+                                try:
+                                    cur.executescript("""BEGIN TRANSACTION;
+                                                  UPDATE card SET balance = {} WHERE number = {};
+                                                  UPDATE card SET balance = {} WHERE number = {};
+                                                  COMMIT;""".format(new_r1_b, input_card_n, new_r2_b, input_tr_account))
+                                    print('Success!')
+                                except Exception:
+                                    cur.execute('ROLLBACK;')
+                                    print('Transaction was interrupted. Try again.')
                             else:
                                 print('Not enough money!')
 
