@@ -12,9 +12,8 @@ cur.execute('CREATE TABLE IF NOT EXISTS card (id INTEGER, number TEXT, pin TEXT,
 conn.commit()
 # variables
 cur.execute('SELECT COUNT(*) FROM card;')  # returns number of cards issued (info stored in card DB)
-n = cur.fetchone()[0]  # retrieves data after executing the SELECT statement (tuple type)
-account_id = 1000000000 - n
-input_id = n
+n_cards_issued = cur.fetchone()[0]  # retrieves data after executing the SELECT statement (tuple type)
+
 
 
 # define function to calculate Luch digit
@@ -52,31 +51,31 @@ def conv_to_intlist(acc_to_verify):
 
 
 while True:
-    customer_choice = int(input("1. Create an account\n"
-                                "2. Log into account\n"
-                                "0. Exit\n"))
+    customer_choice = int(input('1. Create an account\n'
+                                '2. Log into account\n'
+                                '0. Exit\n'))
     if customer_choice == 1:
-        input_id += 1
-        account_id -= 1
+        n_cards_issued += 1
+        account_id = f'{str(n_cards_issued):0>9}'
         # calc Luch digit
         # create list of account_id digits
-        acc_to_verify = (BIN + str(account_id))
+        acc_to_verify = f'{BIN}{account_id}'
         acc_id_list = conv_to_intlist(acc_to_verify)
         checksum = luch_calc(acc_id_list)
         # define card number 
-        card_number = BIN + str(account_id) + str(checksum)
+        card_number = f'{BIN}{account_id}{checksum}'
         # text datatype was assigned to pin attribute in card table
         # pins starting with zero are not generated since in such case first symbol in pin is dropped when committing to DB
-        pin = str(random.randrange(1, 10, 1)) + str(random.randrange(0, 10, 1)) + str(random.randrange(0, 10, 1)) + str(random.randrange(0, 10, 1))
+        pin = f'{random.randrange(1000, 9999, 1)}'
         # append DB
-        cur.execute('INSERT INTO card (id, number, pin) VALUES ({}, {},{})'.format(input_id, card_number, pin))
+        cur.execute('INSERT INTO card (id, number, pin) VALUES ({}, {}, {})'.format(n_cards_issued, card_number, pin))
         conn.commit()
         # print the required msg to customer
-        print(("Your card has been created\n"
-               "Your card number:\n"
-               "{}\n"
-               "Your card PIN:\n"
-               "{}").format(card_number, pin))
+        print(('Your card has been created\n'
+               'Your card number:\n'
+               '{}\n'
+               'Your card PIN:\n'
+               '{}').format(card_number, pin))
     # If the customer chooses ‘Log into account’, they are asked to enter their card information
     elif customer_choice == 2:
         input_card_n = input('Enter your card number:')
@@ -89,12 +88,12 @@ while True:
                 # ... 'You have successfully logged in!' is printed ...
                 print('You have successfully logged in!')
                 # ... and the program offers menu to chose further actions
-                customer_choice_2 = int(input("1. Balance\n"
-                                              "2. Add income\n"
-                                              "3. Do transfer\n"
-                                              "4. Close account\n"
-                                              "5. Log out\n"
-                                              "0. Exit\n"))
+                customer_choice_2 = int(input('1. Balance\n'
+                                              '2. Add income\n'
+                                              '3. Do transfer\n'
+                                              '4. Close account\n'
+                                              '5. Log out\n'
+                                              '0. Exit\n'))
                 # the same menu is offered to a customer each time they chose 1, 2 and 3 options
                 while customer_choice_2 in range(1, 4):
                     cur.execute('SELECT balance FROM card WHERE number = {};'.format(input_card_n))
@@ -134,10 +133,10 @@ while True:
                                 new_r2_b = r2 + input_tr_amount
                                 #cur.execute('BEGIN TRANSACTION;')
                                 try:
-                                    cur.executescript("""BEGIN TRANSACTION;
+                                    cur.executescript('''BEGIN TRANSACTION;
                                                   UPDATE card SET balance = {} WHERE number = {};
                                                   UPDATE card SET balance = {} WHERE number = {};
-                                                  COMMIT;""".format(new_r1_b, input_card_n, new_r2_b, input_tr_account))
+                                                  COMMIT;'''.format(new_r1_b, input_card_n, new_r2_b, input_tr_account))
                                     print('Success!')
                                 except Exception:
                                     cur.execute('ROLLBACK;')
@@ -145,12 +144,12 @@ while True:
                             else:
                                 print('Not enough money!')
 
-                    customer_choice_2 = int(input("1. Balance\n"
-                                                  "2. Add income\n"
-                                                  "3. Do transfer\n"
-                                                  "4. Close account\n"
-                                                  "5. Log out\n"
-                                                  "0. Exit\n"))
+                    customer_choice_2 = int(input('1. Balance\n'
+                                                  '2. Add income\n'
+                                                  '3. Do transfer\n'
+                                                  '4. Close account\n'
+                                                  '5. Log out\n'
+                                                  '0. Exit\n'))
                 else:
                     # when customer chooses 2 '2. Log out' the iteration ends and the customer is transferred to outer loop
                     if customer_choice_2 == 4:
